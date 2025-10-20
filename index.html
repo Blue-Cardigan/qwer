@@ -1266,6 +1266,15 @@
         // Copy QR code to clipboard
         function copyQRToClipboard() {
             const canvas = document.getElementById('qrCanvas');
+            
+            // Check if Clipboard API is supported
+            if (!navigator.clipboard || !navigator.clipboard.write) {
+                // Fallback: download instead
+                alert('Your browser doesn\'t support direct copy. The QR code will download instead.');
+                downloadQR();
+                return;
+            }
+
             canvas.toBlob(function(blob) {
                 navigator.clipboard.write([
                     new ClipboardItem({ 'image/png': blob })
@@ -1276,7 +1285,15 @@
                         feedback.style.display = 'none';
                     }, 2000);
                 }).catch(function(err) {
-                    alert('Failed to copy image. Your browser may not support this feature.');
+                    // Permission denied or other error
+                    if (err.name === 'NotAllowedError') {
+                        alert('Copy permission denied. Please allow clipboard access in your browser settings.');
+                    } else if (err.name === 'NotSupportedError') {
+                        alert('Your browser doesn\'t support copying images. Downloading instead.');
+                        downloadQR();
+                    } else {
+                        alert('Failed to copy image: ' + err.message);
+                    }
                     console.error('Clipboard error:', err);
                 });
             });
