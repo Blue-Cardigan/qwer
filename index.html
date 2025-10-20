@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-label {
+            display: block;
+            padding: 12px;
+            border: 2px dashed #e1e5e9;
+            border-radius: 8px;
+            text-align: center;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-label:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .preview-container {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .preview-image {
+            max-width: 80px;
+            max-height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e1e5e9;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 20px;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+
+        .result-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        #qrCanvas {
+            max-width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+        }
+
+        .download-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+
+        .download-btn:hover {
+            background: #218838;
+        }
+
+        .size-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .size-controls input[type="range"] {
+            flex: 1;
+        }
+
+        .size-display {
+            min-width: 60px;
+            font-weight: 500;
+            color: #667eea;
+        }
+
+        .style-controls {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .style-controls h3 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .color-control {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .color-control label {
+            margin-bottom: 0;
+            font-size: 14px;
+        }
+
+        .color-control input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .opacity-slider {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .opacity-slider input[type="range"] {
+            flex: 1;
+            height: 6px;
+            cursor: pointer;
+        }
+
+        .opacity-value {
+            min-width: 35px;
+            font-size: 12px;
+            color: #667eea;
+            font-weight: 500;
+            text-align: right;
+        }
+
+        .select-control {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .select-control label {
+            margin-bottom: 0;
+            font-size: 14px;
+        }
+
+        .select-control select {
+            padding: 8px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .copy-btn {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #0052a3;
+        }
+
+        .copy-btn:active {
+            background: #003d7a;
+        }
+
+        .copy-feedback {
+            display: none;
+            color: #28a745;
+            font-weight: 500;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .theme-preset {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .theme-btn {
+            padding: 8px 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .theme-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .base-color-section {
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .base-color-section label {
+            margin-bottom: 0;
+            font-weight: 500;
+            color: #333;
+            min-width: 100px;
+        }
+
+        .base-color-section input[type="color"] {
+            width: 60px;
+            height: 40px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .sync-btn {
+            padding: 6px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+
+        .sync-btn:hover {
+            background: #764ba2;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            font-size: 14px;
+            cursor: pointer;
+            color: #555;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .controls-row .color-control {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .controls-row .select-control {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .slider-control {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .slider-control label {
+            font-size: 14px;
+            margin-bottom: 0;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .slider-control input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .slider-value {
+            font-size: 12px;
+            color: #667eea;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 QR Code Generator</h1>
+        
+        <div class="input-group">
+            <label for="qrText">Text or URL:</label>
+            <textarea id="qrText" placeholder="Enter text, URL, or any content for your QR code...">https://lu.ma/zerotocoder</textarea>
+        </div>
+
+        <div class="input-group">
+            <label for="qrTitle">Title (optional):</label>
+            <input type="text" id="qrTitle" placeholder="e.g., Zero to Coder">
+        </div>
+
+        <div class="input-group">
+            <label for="qrSubtitle">Subtitle (optional):</label>
+            <input type="text" id="qrSubtitle" placeholder="e.g., WhatsApp group">
+        </div>
+
+        <div class="input-group">
+            <label>Center Image (optional):</label>
+            <div class="file-upload">
+                <input type="file" id="logoInput" class="file-input" accept="image/*">
+                <label for="logoInput" class="file-label">
+                    📁 Click to upload image or drag & drop
+                </label>
+            </div>
+            <div class="preview-container" id="previewContainer"></div>
+        </div>
+
+        <div class="input-group">
+            <label>QR Code Size:</label>
+            <div class="size-controls">
+                <input type="range" id="sizeSlider" min="200" max="600" value="400">
+                <span class="size-display" id="sizeDisplay">400px</span>
+            </div>
+        </div>
+
+        <!-- Style Parameters Section -->
+        <div class="style-controls">
+            <h3>✨ Style Your QR Code</h3>
+            
+            <!-- Base Color Section -->
+            <div class="base-color-section">
+                <label for="baseColor">🎨 Base Color:</label>
+                <input type="color" id="baseColor" value="#667eea">
+                <button class="sync-btn" onclick="syncBaseColor()">Auto Sync Colors</button>
+            </div>
+
+            <div class="theme-preset">
+                <button class="theme-btn" onclick="applyTheme('classic')">📊 Classic</button>
+                <button class="theme-btn" onclick="applyTheme('neon')">⚡ Neon</button>
+                <button class="theme-btn" onclick="applyTheme('sunset')">🌅 Sunset</button>
+                <button class="theme-btn" onclick="applyTheme('ocean')">🌊 Ocean</button>
+                <button class="theme-btn" onclick="applyTheme('forest')">🌲 Forest</button>
+                <button class="theme-btn" onclick="applyTheme('glassy')">🔮 Glassy</button>
+                <button class="theme-btn" onclick="applyTheme('vibrant')">🎨 Vibrant</button>
+                <button class="theme-btn" onclick="applyTheme('minimal')">⚪ Minimal</button>
+            </div>
+
+            <!-- Core Color Controls -->
+            <div class="controls-grid">
+                <div class="color-control">
+                    <label for="qrDarkColor">QR Code Color:</label>
+                    <input type="color" id="qrDarkColor" value="#000000">
+                    <div class="opacity-slider">
+                        <input type="range" id="qrDarkOpacity" min="0" max="100" value="100">
+                        <span class="opacity-value" id="qrDarkOpacityValue">100%</span>
+                    </div>
+                </div>
+                <div class="color-control">
+                    <label for="qrLightColor">QR Background:</label>
+                    <input type="color" id="qrLightColor" value="#ffffff">
+                    <div class="opacity-slider">
+                        <input type="range" id="qrLightOpacity" min="0" max="100" value="100">
+                        <span class="opacity-value" id="qrLightOpacityValue">100%</span>
+                    </div>
+                </div>
+                <div class="color-control">
+                    <label for="canvasBgColor">Canvas Background:</label>
+                    <input type="color" id="canvasBgColor" value="#f8f9fa">
+                    <div class="opacity-slider">
+                        <input type="range" id="canvasBgOpacity" min="0" max="100" value="100">
+                        <span class="opacity-value" id="canvasBgOpacityValue">100%</span>
+                    </div>
+                </div>
+                <div class="color-control">
+                    <label for="titleColor">Title Color:</label>
+                    <input type="color" id="titleColor" value="#333333">
+                    <div class="opacity-slider">
+                        <input type="range" id="titleOpacity" min="0" max="100" value="100">
+                        <span class="opacity-value" id="titleOpacityValue">100%</span>
+                    </div>
+                </div>
+                <div class="color-control">
+                    <label for="subtitleColor">Subtitle Color:</label>
+                    <input type="color" id="subtitleColor" value="#666666">
+                    <div class="opacity-slider">
+                        <input type="range" id="subtitleOpacity" min="0" max="100" value="100">
+                        <span class="opacity-value" id="subtitleOpacityValue">100%</span>
+                    </div>
+                </div>
+                <div class="select-control">
+                    <label for="logoBgStyle">Logo Background:</label>
+                    <select id="logoBgStyle">
+                        <option value="circle">🔵 Circle</option>
+                        <option value="rounded">◻️ Rounded Square</option>
+                        <option value="square">⬜ Square</option>
+                        <option value="none">❌ None</option>
+                    </select>
+                </div>
+                <div class="color-control">
+                    <label for="logoBgColor">Logo BG Color:</label>
+                    <input type="color" id="logoBgColor" value="#ffffff">
+                    <div class="opacity-slider">
+                        <input type="range" id="logoBgOpacity" min="0" max="100" value="100">
+                        <span class="opacity-value" id="logoBgOpacityValue">100%</span>
+                    </div>
+                </div>
+                <div class="select-control">
+                    <label for="borderStyle">Border Style:</label>
+                    <select id="borderStyle">
+                        <option value="none">❌ None</option>
+                        <option value="thin">━ Thin</option>
+                        <option value="thick">█ Thick</option>
+                        <option value="double">▬ Double</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Visual Effects Section -->
+            <div style="margin-top: 20px; padding-top: 15px; border-top: 2px solid #e1e5e9;">
+                <h4 style="color: #333; font-size: 14px; margin-bottom: 12px;">✨ Visual Effects</h4>
+                
+                <!-- Gradient Option -->
+                <div class="controls-row">
+                    <div class="select-control">
+                        <label for="gradientStyle">Background Gradient:</label>
+                        <select id="gradientStyle">
+                            <option value="none">❌ None</option>
+                            <option value="horizontal">➡️ Horizontal</option>
+                            <option value="vertical">⬇️ Vertical</option>
+                            <option value="diagonal">↘️ Diagonal</option>
+                            <option value="radial">⭕ Radial</option>
+                        </select>
+                    </div>
+                    <div class="color-control">
+                        <label for="gradientColor2">Gradient End Color:</label>
+                        <input type="color" id="gradientColor2" value="#764ba2">
+                    </div>
+                </div>
+
+                <!-- Rounded Corners -->
+                <div class="checkbox-group">
+                    <input type="checkbox" id="enableRoundedCorners">
+                    <label for="enableRoundedCorners">🔲 Rounded QR Corners</label>
+                </div>
+
+                <div class="slider-control">
+                    <label for="cornerRadius">Corner Radius (px):</label>
+                    <input type="range" id="cornerRadius" min="0" max="30" value="8" disabled>
+                    <span class="slider-value" id="cornerRadiusValue">8 px</span>
+                </div>
+
+                <!-- Sheen/Gloss Effect -->
+                <div class="checkbox-group">
+                    <input type="checkbox" id="enableSheen">
+                    <label for="enableSheen">✨ Glossy Sheen</label>
+                </div>
+
+                <div class="slider-control">
+                    <label for="sheenOpacity">Sheen Intensity:</label>
+                    <input type="range" id="sheenOpacity" min="0" max="50" value="15" disabled>
+                    <span class="slider-value" id="sheenOpacityValue">15%</span>
+                </div>
+
+                <!-- Image Interpolation (Smooth) -->
+                <div class="checkbox-group">
+                    <input type="checkbox" id="enableImageSmoothing">
+                    <label for="enableImageSmoothing">🖼️ Smooth Image Edges</label>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="enableLogoGlow">
+                    <label for="enableLogoGlow">💫 Logo Glow Effect</label>
+                </div>
+
+                <div class="slider-control">
+                    <label for="logoGlowSize">Logo Glow Size:</label>
+                    <input type="range" id="logoGlowSize" min="5" max="30" value="15" disabled>
+                    <span class="slider-value" id="logoGlowSizeValue">15 px</span>
+                </div>
+
+                <!-- QR Code Position Nudge -->
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+                    <h5 style="color: #333; font-size: 12px; margin-bottom: 10px; font-weight: 600;">🎯 QR Code Position Nudge</h5>
+                    
+                    <div class="slider-control">
+                        <label for="qrOffsetX">Horizontal Offset (px):</label>
+                        <input type="range" id="qrOffsetX" min="-20" max="20" value="0">
+                        <span class="slider-value" id="qrOffsetXValue">0 px</span>
+                    </div>
+
+                    <div class="slider-control">
+                        <label for="qrOffsetY">Vertical Offset (px):</label>
+                        <input type="range" id="qrOffsetY" min="-20" max="20" value="0">
+                        <span class="slider-value" id="qrOffsetYValue">0 px</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="generate-btn" onclick="generateQR()">Generate QR Code</button>
+
+        <div class="result-container" id="resultContainer" style="display: none;">
+            <canvas id="qrCanvas"></canvas>
+            <br>
+            <div class="action-buttons">
+                <button class="download-btn" onclick="downloadQR()">Download QR Code</button>
+                <button class="copy-btn" onclick="copyQRToClipboard()">Copy Image</button>
+            </div>
+            <div class="copy-feedback" id="copyFeedback">✓ Copied to clipboard!</div>
+        </div>
+    </div>
+
+    <script>
+        let uploadedImage = null;
+
+        // Helper function to convert hex to RGB
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        // Helper function to convert RGB to Hex
+        function rgbToHex(r, g, b) {
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        }
+
+        // Helper function to convert RGB to HSL
+        function rgbToHsl(r, g, b) {
+            r /= 255;
+            g /= 255;
+            b /= 255;
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+
+            if (max === min) {
+                h = s = 0;
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+                    case g: h = ((b - r) / d + 2) / 6; break;
+                    case b: h = ((r - g) / d + 4) / 6; break;
+                }
+            }
+            return { h, s, l };
+        }
+
+        // Helper function to convert HSL to RGB
+        function hslToRgb(h, s, l) {
+            let r, g, b;
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+            return {
+                r: Math.round(r * 255),
+                g: Math.round(g * 255),
+                b: Math.round(b * 255)
+            };
+        }
+
+        // Sync colors based on base color
+        function syncBaseColor() {
+            const baseHex = document.getElementById('baseColor').value;
+            const baseRgb = hexToRgb(baseHex);
+            const baseHsl = rgbToHsl(baseRgb.r, baseRgb.g, baseRgb.b);
+
+            // Set QR dark color to base color
+            document.getElementById('qrDarkColor').value = baseHex;
+            document.getElementById('qrDarkOpacity').value = 100; // Ensure opacity is 100%
+
+            // Create light background (lighter version)
+            const lightHsl = { h: baseHsl.h, s: baseHsl.s * 0.2, l: 0.95 };
+            const lightRgb = hslToRgb(lightHsl.h, lightHsl.s, lightHsl.l);
+            document.getElementById('qrLightColor').value = rgbToHex(lightRgb.r, lightRgb.g, lightRgb.b);
+            document.getElementById('qrLightOpacity').value = 100; // Ensure opacity is 100%
+
+            // Set canvas background to even lighter
+            const canvasBgHsl = { h: baseHsl.h, s: baseHsl.s * 0.1, l: 0.97 };
+            const canvasBgRgb = hslToRgb(canvasBgHsl.h, canvasBgHsl.s, canvasBgHsl.l);
+            document.getElementById('canvasBgColor').value = rgbToHex(canvasBgRgb.r, canvasBgRgb.g, canvasBgRgb.b);
+            document.getElementById('canvasBgOpacity').value = 100; // Ensure opacity is 100%
+
+            // Set title color to base color (darker)
+            const titleHsl = { h: baseHsl.h, s: baseHsl.s, l: baseHsl.l * 0.7 };
+            const titleRgb = hslToRgb(titleHsl.h, titleHsl.s, titleHsl.l);
+            document.getElementById('titleColor').value = rgbToHex(titleRgb.r, titleRgb.g, titleRgb.b);
+            document.getElementById('titleOpacity').value = 100; // Ensure opacity is 100%
+
+            // Set subtitle to medium tone
+            const subtitleHsl = { h: baseHsl.h, s: baseHsl.s * 0.8, l: baseHsl.l * 0.85 };
+            const subtitleRgb = hslToRgb(subtitleHsl.h, subtitleHsl.s, subtitleHsl.l);
+            document.getElementById('subtitleColor').value = rgbToHex(subtitleRgb.r, subtitleRgb.g, subtitleRgb.b);
+            document.getElementById('subtitleOpacity').value = 100; // Ensure opacity is 100%
+
+            // Update gradient color
+            const gradientHsl = { h: (baseHsl.h + 0.3) % 1, s: baseHsl.s, l: baseHsl.l * 0.8 };
+            const gradientRgb = hslToRgb(gradientHsl.h, gradientHsl.s, gradientHsl.l);
+            document.getElementById('gradientColor2').value = rgbToHex(gradientRgb.r, gradientRgb.g, gradientRgb.b);
+
+            // Set logo background color to base
+            document.getElementById('logoBgColor').value = rgbToHex(lightRgb.r, lightRgb.g, lightRgb.b);
+            document.getElementById('logoBgOpacity').value = 100; // Ensure opacity is 100%
+        }
+
+        // Handle checkbox state changes
+        document.getElementById('enableRoundedCorners').addEventListener('change', function() {
+            document.getElementById('cornerRadius').disabled = !this.checked;
+        });
+
+        document.getElementById('enableSheen').addEventListener('change', function() {
+            document.getElementById('sheenOpacity').disabled = !this.checked;
+        });
+
+        document.getElementById('enableLogoGlow').addEventListener('change', function() {
+            document.getElementById('logoGlowSize').disabled = !this.checked;
+        });
+
+        // Update slider value displays
+        document.getElementById('cornerRadius').addEventListener('input', function() {
+            document.getElementById('cornerRadiusValue').textContent = this.value + ' px';
+        });
+
+        document.getElementById('sheenOpacity').addEventListener('input', function() {
+            document.getElementById('sheenOpacityValue').textContent = this.value + '%';
+        });
+
+        document.getElementById('logoGlowSize').addEventListener('input', function() {
+            document.getElementById('logoGlowSizeValue').textContent = this.value + ' px';
+        });
+
+        // Update offset slider displays
+        document.getElementById('qrOffsetX').addEventListener('input', function() {
+            document.getElementById('qrOffsetXValue').textContent = this.value + ' px';
+        });
+
+        document.getElementById('qrOffsetY').addEventListener('input', function() {
+            document.getElementById('qrOffsetYValue').textContent = this.value + ' px';
+        });
+
+        // Update opacity value displays
+        document.getElementById('qrDarkOpacity').addEventListener('input', function() {
+            document.getElementById('qrDarkOpacityValue').textContent = this.value + '%';
+        });
+        document.getElementById('qrLightOpacity').addEventListener('input', function() {
+            document.getElementById('qrLightOpacityValue').textContent = this.value + '%';
+        });
+        document.getElementById('canvasBgOpacity').addEventListener('input', function() {
+            document.getElementById('canvasBgOpacityValue').textContent = this.value + '%';
+        });
+        document.getElementById('titleOpacity').addEventListener('input', function() {
+            document.getElementById('titleOpacityValue').textContent = this.value + '%';
+        });
+        document.getElementById('subtitleOpacity').addEventListener('input', function() {
+            document.getElementById('subtitleOpacityValue').textContent = this.value + '%';
+        });
+        document.getElementById('logoBgOpacity').addEventListener('input', function() {
+            document.getElementById('logoBgOpacityValue').textContent = this.value + '%';
+        });
+
+        // Theme presets
+        const themes = {
+            classic: {
+                qrDarkColor: '#000000',
+                qrLightColor: '#ffffff',
+                canvasBgColor: '#f8f9fa',
+                titleColor: '#333333',
+                subtitleColor: '#666666',
+                gradientStyle: 'none',
+                gradientColor2: '#ffffff',
+                enableRoundedCorners: false,
+                cornerRadius: 8,
+                enableSheen: false,
+                sheenOpacity: 15,
+                enableLogoGlow: false,
+                logoGlowSize: 15,
+                logoBgStyle: 'circle'
+            },
+            neon: {
+                qrDarkColor: '#ff00ff',
+                qrLightColor: '#000000',
+                canvasBgColor: '#1a1a2e',
+                titleColor: '#00ffff',
+                subtitleColor: '#ff00ff',
+                gradientStyle: 'diagonal',
+                gradientColor2: '#00ffff',
+                enableRoundedCorners: true,
+                cornerRadius: 12,
+                enableSheen: true,
+                sheenOpacity: 25,
+                enableLogoGlow: true,
+                logoGlowSize: 20,
+                logoBgStyle: 'circle'
+            },
+            sunset: {
+                qrDarkColor: '#ff6b35',
+                qrLightColor: '#ffd89b',
+                canvasBgColor: '#ffe66d',
+                titleColor: '#ff6b35',
+                subtitleColor: '#ff8c42',
+                gradientStyle: 'vertical',
+                gradientColor2: '#ff8c42',
+                enableRoundedCorners: true,
+                cornerRadius: 15,
+                enableSheen: true,
+                sheenOpacity: 20,
+                enableLogoGlow: false,
+                logoGlowSize: 15,
+                logoBgStyle: 'rounded'
+            },
+            ocean: {
+                qrDarkColor: '#0066cc',
+                qrLightColor: '#e6f2ff',
+                canvasBgColor: '#b3d9ff',
+                titleColor: '#004499',
+                subtitleColor: '#006699',
+                gradientStyle: 'radial',
+                gradientColor2: '#0099ff',
+                enableRoundedCorners: true,
+                cornerRadius: 20,
+                enableSheen: true,
+                sheenOpacity: 18,
+                enableLogoGlow: true,
+                logoGlowSize: 12,
+                logoBgStyle: 'circle'
+            },
+            forest: {
+                qrDarkColor: '#2d5016',
+                qrLightColor: '#e8f5e9',
+                canvasBgColor: '#c8e6c9',
+                titleColor: '#2d5016',
+                subtitleColor: '#558b2f',
+                gradientStyle: 'horizontal',
+                gradientColor2: '#558b2f',
+                enableRoundedCorners: true,
+                cornerRadius: 10,
+                enableSheen: false,
+                sheenOpacity: 15,
+                enableLogoGlow: false,
+                logoGlowSize: 15,
+                logoBgStyle: 'rounded'
+            },
+            glassy: {
+                qrDarkColor: '#333333',
+                qrLightColor: '#f0f4f8',
+                canvasBgColor: '#e8f0f7',
+                titleColor: '#333333',
+                subtitleColor: '#666666',
+                gradientStyle: 'radial',
+                gradientColor2: '#ffffff',
+                enableRoundedCorners: true,
+                cornerRadius: 18,
+                enableSheen: true,
+                sheenOpacity: 35,
+                enableLogoGlow: false,
+                logoGlowSize: 15,
+                logoBgStyle: 'rounded'
+            },
+            vibrant: {
+                qrDarkColor: '#d32f2f',
+                qrLightColor: '#fff59d',
+                canvasBgColor: '#ff5252',
+                titleColor: '#d32f2f',
+                subtitleColor: '#ff6e40',
+                gradientStyle: 'diagonal',
+                gradientColor2: '#ffeb3b',
+                enableRoundedCorners: true,
+                cornerRadius: 16,
+                enableSheen: true,
+                sheenOpacity: 22,
+                enableLogoGlow: true,
+                logoGlowSize: 18,
+                logoBgStyle: 'circle'
+            },
+            minimal: {
+                qrDarkColor: '#1a1a1a',
+                qrLightColor: '#ffffff',
+                canvasBgColor: '#fafafa',
+                titleColor: '#1a1a1a',
+                subtitleColor: '#808080',
+                gradientStyle: 'none',
+                gradientColor2: '#ffffff',
+                enableRoundedCorners: true,
+                cornerRadius: 8,
+                enableSheen: false,
+                sheenOpacity: 15,
+                enableLogoGlow: false,
+                logoGlowSize: 15,
+                logoBgStyle: 'none'
+            }
+        };
+
+        function applyTheme(themeName) {
+            const theme = themes[themeName];
+            document.getElementById('qrDarkColor').value = theme.qrDarkColor;
+            document.getElementById('qrDarkOpacity').value = 100; // Ensure opacity is 100%
+            document.getElementById('qrLightColor').value = theme.qrLightColor;
+            document.getElementById('qrLightOpacity').value = 100; // Ensure opacity is 100%
+            document.getElementById('canvasBgColor').value = theme.canvasBgColor;
+            document.getElementById('canvasBgOpacity').value = 100; // Ensure opacity is 100%
+            document.getElementById('titleColor').value = theme.titleColor;
+            document.getElementById('titleOpacity').value = 100; // Ensure opacity is 100%
+            document.getElementById('subtitleColor').value = theme.subtitleColor;
+            document.getElementById('subtitleOpacity').value = 100; // Ensure opacity is 100%
+            document.getElementById('gradientStyle').value = theme.gradientStyle;
+            document.getElementById('gradientColor2').value = theme.gradientColor2;
+            document.getElementById('enableRoundedCorners').checked = theme.enableRoundedCorners;
+            document.getElementById('cornerRadius').disabled = !theme.enableRoundedCorners;
+            document.getElementById('cornerRadius').value = theme.cornerRadius;
+            document.getElementById('cornerRadiusValue').textContent = theme.cornerRadius + ' px';
+            document.getElementById('enableSheen').checked = theme.enableSheen;
+            document.getElementById('sheenOpacity').disabled = !theme.enableSheen;
+            document.getElementById('sheenOpacity').value = theme.sheenOpacity;
+            document.getElementById('sheenOpacityValue').textContent = theme.sheenOpacity + '%';
+            document.getElementById('enableLogoGlow').checked = theme.enableLogoGlow;
+            document.getElementById('logoGlowSize').disabled = !theme.enableLogoGlow;
+            document.getElementById('logoGlowSize').value = theme.logoGlowSize;
+            document.getElementById('logoGlowSizeValue').textContent = theme.logoGlowSize + ' px';
+            document.getElementById('logoBgStyle').value = theme.logoBgStyle;
+            document.getElementById('logoBgOpacity').value = 100; // Ensure opacity is 100%
+        }
+
+        // Handle image upload
+        document.getElementById('logoInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedImage = new Image();
+                    uploadedImage.onload = function() {
+                        showPreview(e.target.result);
+                    };
+                    uploadedImage.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Show image preview
+        function showPreview(src) {
+            const container = document.getElementById('previewContainer');
+            container.innerHTML = `<img src="${src}" class="preview-image" alt="Preview">`;
+        }
+
+        // Update size display
+        document.getElementById('sizeSlider').addEventListener('input', function() {
+            document.getElementById('sizeDisplay').textContent = this.value + 'px';
+        });
+
+        // Generate QR code
+        function generateQR() {
+            const text = document.getElementById('qrText').value.trim();
+            const title = document.getElementById('qrTitle').value.trim();
+            const subtitle = document.getElementById('qrSubtitle').value.trim();
+            const size = parseInt(document.getElementById('sizeSlider').value);
+
+            // Get style parameters
+            const qrDarkColor = document.getElementById('qrDarkColor').value;
+            const qrDarkOpacity = parseInt(document.getElementById('qrDarkOpacity').value);
+            const qrLightColor = document.getElementById('qrLightColor').value;
+            const qrLightOpacity = parseInt(document.getElementById('qrLightOpacity').value);
+            let canvasBgColor = document.getElementById('canvasBgColor').value;
+            const canvasBgOpacity = parseInt(document.getElementById('canvasBgOpacity').value);
+            const titleColor = document.getElementById('titleColor').value;
+            const titleOpacity = parseInt(document.getElementById('titleOpacity').value);
+            const subtitleColor = document.getElementById('subtitleColor').value;
+            const subtitleOpacity = parseInt(document.getElementById('subtitleOpacity').value);
+            const logoBgStyle = document.getElementById('logoBgStyle').value;
+            const logoBgColor = document.getElementById('logoBgColor').value;
+            const logoBgOpacity = parseInt(document.getElementById('logoBgOpacity').value);
+            const borderStyle = document.getElementById('borderStyle').value;
+
+            // Visual effects
+            const gradientStyle = document.getElementById('gradientStyle').value;
+            const gradientColor2 = document.getElementById('gradientColor2').value;
+            const enableRoundedCorners = document.getElementById('enableRoundedCorners').checked;
+            const cornerRadius = parseInt(document.getElementById('cornerRadius').value);
+            const enableSheen = document.getElementById('enableSheen').checked;
+            const sheenOpacity = parseInt(document.getElementById('sheenOpacity').value);
+            const enableImageSmoothing = document.getElementById('enableImageSmoothing').checked;
+            const enableLogoGlow = document.getElementById('enableLogoGlow').checked;
+            const logoGlowSize = parseInt(document.getElementById('logoGlowSize').value);
+            const qrOffsetX = parseInt(document.getElementById('qrOffsetX').value);
+            const qrOffsetY = parseInt(document.getElementById('qrOffsetY').value);
+
+            if (!text) {
+                alert('Please enter some text or URL for the QR code');
+                return;
+            }
+
+            const canvas = document.getElementById('qrCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = enableImageSmoothing;
+
+            // Calculate total height including text
+            const textHeight = (title ? 40 : 0) + (subtitle ? 30 : 0) + (title || subtitle ? 30 : 0);
+            const totalHeight = size + textHeight;
+
+            canvas.width = size;
+            canvas.height = totalHeight;
+
+            // Draw gradient or solid background
+            if (gradientStyle !== 'none') {
+                let gradient;
+                if (gradientStyle === 'horizontal') {
+                    gradient = ctx.createLinearGradient(0, 0, size, 0);
+                } else if (gradientStyle === 'vertical') {
+                    gradient = ctx.createLinearGradient(0, 0, 0, totalHeight);
+                } else if (gradientStyle === 'diagonal') {
+                    gradient = ctx.createLinearGradient(0, 0, size, totalHeight);
+                } else if (gradientStyle === 'radial') {
+                    gradient = ctx.createRadialGradient(size/2, totalHeight/2, 0, size/2, totalHeight/2, Math.max(size, totalHeight));
+                }
+                gradient.addColorStop(0, `rgba(${hexToRgb(canvasBgColor).r}, ${hexToRgb(canvasBgColor).g}, ${hexToRgb(canvasBgColor).b}, ${canvasBgOpacity / 100})`);
+                gradient.addColorStop(1, `rgba(${hexToRgb(gradientColor2).r}, ${hexToRgb(gradientColor2).g}, ${hexToRgb(gradientColor2).b}, 0)`);
+                ctx.fillStyle = gradient;
+            } else {
+                ctx.fillStyle = `rgba(${hexToRgb(canvasBgColor).r}, ${hexToRgb(canvasBgColor).g}, ${hexToRgb(canvasBgColor).b}, ${canvasBgOpacity / 100})`;
+            }
+            ctx.fillRect(0, 0, size, totalHeight);
+
+            // Draw border if enabled
+            if (borderStyle !== 'none') {
+                ctx.strokeStyle = `rgba(${hexToRgb(qrDarkColor).r}, ${hexToRgb(qrDarkColor).g}, ${hexToRgb(qrDarkColor).b}, ${qrDarkOpacity / 100})`;
+                if (borderStyle === 'thin') {
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(2, 2, size - 4, totalHeight - 4);
+                } else if (borderStyle === 'thick') {
+                    ctx.lineWidth = 8;
+                    ctx.strokeRect(4, 4, size - 8, totalHeight - 8);
+                } else if (borderStyle === 'double') {
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(4, 4, size - 8, totalHeight - 8);
+                    ctx.strokeRect(8, 8, size - 16, totalHeight - 16);
+                }
+            }
+
+            // Draw title and subtitle
+            let yOffset = 0;
+            if (title || subtitle) {
+                ctx.textAlign = 'center';
+                
+                if (title) {
+                    ctx.font = 'bold 24px Arial';
+                    ctx.fillStyle = `rgba(${hexToRgb(titleColor).r}, ${hexToRgb(titleColor).g}, ${hexToRgb(titleColor).b}, ${titleOpacity / 100})`;
+                    ctx.fillText(title, size / 2, 30);
+                    yOffset += 40;
+                }
+                
+                if (subtitle) {
+                    ctx.font = '18px Arial';
+                    ctx.fillStyle = `rgba(${hexToRgb(subtitleColor).r}, ${hexToRgb(subtitleColor).g}, ${hexToRgb(subtitleColor).b}, ${subtitleOpacity / 100})`;
+                    ctx.fillText(subtitle, size / 2, yOffset + 20);
+                    yOffset += 30;
+                }
+                
+                yOffset += 10;
+            }
+
+            // Generate QR code using QRious with custom colors
+            // Note: QRious generates canvas sizes based on QR version needed,
+            // so we need to handle scaling to ensure it always fills our target size
+            const tempCanvas = document.createElement('canvas');
+            const qr = new QRious({
+                element: tempCanvas,
+                value: text,
+                size: size,
+                padding: 0,
+                foreground: `rgba(${hexToRgb(qrDarkColor).r}, ${hexToRgb(qrDarkColor).g}, ${hexToRgb(qrDarkColor).b}, ${qrDarkOpacity / 100})`,
+                background: `rgba(${hexToRgb(qrLightColor).r}, ${hexToRgb(qrLightColor).g}, ${hexToRgb(qrLightColor).b}, ${qrLightOpacity / 100})`
+            });
+
+            // Get actual canvas dimensions (may differ from requested size due to QR version)
+            const qrActualSize = tempCanvas.width;
+
+            // Auto-calculate centering offset for longer URLs (higher QR versions)
+            // If QR is smaller than target size, center it automatically
+            let autoOffsetX = qrOffsetX;
+            let autoOffsetY = qrOffsetY;
+            
+            if (qrActualSize < size) {
+                // QR code is smaller than target - auto-center it if user hasn't manually adjusted
+                const calculatedOffset = (size - qrActualSize) / 2;
+                // Only apply auto-offset if user has manual offsets at default (0, 0)
+                if (qrOffsetX === 0 && qrOffsetY === 0) {
+                    autoOffsetX = Math.round(calculatedOffset);
+                    autoOffsetY = Math.round(calculatedOffset);
+                }
+            }
+
+            // Create an intermediate canvas to hold the QR at actual size with background
+            const intermediateCanvas = document.createElement('canvas');
+            intermediateCanvas.width = size;
+            intermediateCanvas.height = size;
+            const intermediateCtx = intermediateCanvas.getContext('2d');
+            
+            // Fill with QR background color
+            intermediateCtx.fillStyle = `rgba(${hexToRgb(qrLightColor).r}, ${hexToRgb(qrLightColor).g}, ${hexToRgb(qrLightColor).b}, ${qrLightOpacity / 100})`;
+            intermediateCtx.fillRect(0, 0, size, size);
+            
+            // Draw QR code at actual size with offset
+            intermediateCtx.drawImage(tempCanvas, autoOffsetX, autoOffsetY, qrActualSize, qrActualSize);
+
+            // Draw intermediate canvas to main canvas with rounded corners if enabled
+            if (enableRoundedCorners) {
+                ctx.save();
+                roundRect(ctx, 0, yOffset, size, size, cornerRadius);
+                ctx.clip();
+                ctx.drawImage(intermediateCanvas, 0, yOffset);
+                ctx.restore();
+            } else {
+                ctx.drawImage(intermediateCanvas, 0, yOffset);
+            }
+
+            // Add sheen effect if enabled
+            if (enableSheen) {
+                ctx.fillStyle = `rgba(255, 255, 255, ${sheenOpacity / 100})`;
+                const sheenGradient = ctx.createLinearGradient(0, yOffset, 0, yOffset + size * 0.3);
+                sheenGradient.addColorStop(0, `rgba(255, 255, 255, ${sheenOpacity / 100})`);
+                sheenGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = sheenGradient;
+                if (enableRoundedCorners) {
+                    ctx.save();
+                    roundRect(ctx, 0, yOffset, size, size * 0.4, cornerRadius);
+                    ctx.clip();
+                }
+                ctx.fillRect(0, yOffset, size, size * 0.4);
+                if (enableRoundedCorners) {
+                    ctx.restore();
+                }
+            }
+
+            // Add logo if uploaded
+            if (uploadedImage) {
+                const logoSize = size * 0.15;
+                const logoX = (size - logoSize) / 2;
+                const logoY = yOffset + (size - logoSize) / 2;
+
+                // Draw glow if enabled
+                if (enableLogoGlow) {
+                    ctx.shadowColor = `rgba(${hexToRgb(qrDarkColor).r}, ${hexToRgb(qrDarkColor).g}, ${hexToRgb(qrDarkColor).b}, ${qrDarkOpacity / 100})`;
+                    ctx.shadowBlur = logoGlowSize;
+                    ctx.shadowOffsetX = 0;
+                    ctx.shadowOffsetY = 0;
+                }
+
+                // Draw background based on style
+                if (logoBgStyle !== 'none') {
+                    ctx.fillStyle = `rgba(${hexToRgb(logoBgColor).r}, ${hexToRgb(logoBgColor).g}, ${hexToRgb(logoBgColor).b}, ${logoBgOpacity / 100})`;
+                    
+                    if (logoBgStyle === 'circle') {
+                        ctx.beginPath();
+                        ctx.arc(logoX + logoSize/2, logoY + logoSize/2, logoSize/2 + 5, 0, 2 * Math.PI);
+                        ctx.fill();
+                    } else if (logoBgStyle === 'rounded') {
+                        roundRect(ctx, logoX - 5, logoY - 5, logoSize + 10, logoSize + 10, 8);
+                        ctx.fill();
+                    } else if (logoBgStyle === 'square') {
+                        ctx.fillRect(logoX - 5, logoY - 5, logoSize + 10, logoSize + 10);
+                    }
+                }
+
+                // Draw logo image
+                ctx.save();
+                if (logoBgStyle === 'circle') {
+                    ctx.beginPath();
+                    ctx.arc(logoX + logoSize/2, logoY + logoSize/2, logoSize/2, 0, 2 * Math.PI);
+                    ctx.clip();
+                } else if (logoBgStyle !== 'none') {
+                    roundRect(ctx, logoX, logoY, logoSize, logoSize, 6);
+                    ctx.clip();
+                }
+                ctx.drawImage(uploadedImage, logoX, logoY, logoSize, logoSize);
+                ctx.restore();
+
+                // Reset shadow
+                ctx.shadowColor = 'transparent';
+            }
+
+            // Show result
+            document.getElementById('resultContainer').style.display = 'block';
+            document.getElementById('copyFeedback').style.display = 'none';
+            canvas.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Helper function to draw rounded rectangles
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+
+        // Download QR code
+        function downloadQR() {
+            const canvas = document.getElementById('qrCanvas');
+            const link = document.createElement('a');
+            link.download = 'qr-code.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        // Copy QR code to clipboard
+        function copyQRToClipboard() {
+            const canvas = document.getElementById('qrCanvas');
+            canvas.toBlob(function(blob) {
+                navigator.clipboard.write([
+                    new ClipboardItem({ 'image/png': blob })
+                ]).then(function() {
+                    const feedback = document.getElementById('copyFeedback');
+                    feedback.style.display = 'block';
+                    setTimeout(() => {
+                        feedback.style.display = 'none';
+                    }, 2000);
+                }).catch(function(err) {
+                    alert('Failed to copy image. Your browser may not support this feature.');
+                    console.error('Clipboard error:', err);
+                });
+            });
+        }
+
+        // Generate QR on Enter key
+        document.getElementById('qrText').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                generateQR();
+            }
+        });
+    </script>
+</body>
+</html> 
